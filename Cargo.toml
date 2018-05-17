@@ -1,0 +1,6 @@
+[package]
+name = "wcrs"
+version = "0.1.0"
+authors = ["spook"]
+
+[dependencies]
