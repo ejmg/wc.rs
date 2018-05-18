@@ -1,6 +1,7 @@
 use std::env;
 use std::io::prelude::*;
 use std::fs::File;
+use std::process;
 
 
 struct Args {
@@ -16,9 +17,10 @@ fn main() {
     let args: Vec<String> = env::args().collect();
     println!("{:?}", args);
 
-    // TODO: unwrap this arg
+
     let args = Args::new(&args).unwrap_or_else(|err| {
-        println!("shit is fucked, args not parsed!", );
+        println!("shit is fucked, args not parsed! {}", err);
+        process::exit(1);
     });
 
     println!("flag: {:?}", args.flag);
