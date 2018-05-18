@@ -35,8 +35,10 @@ pub fn run(args: Args) -> Result<(), Box<Error>> {
 fn wc(file: File) -> u64 {
     let buff = BufReader::new(file);
     let mut counter = 0;
-    let mut inword: bool;
+    let mut inword: bool = false;
+    let mut wierd_shit: bool = false;
     let mut prev_char: char;
+    let mut char_before_char: char = '\0';
     // for line in buff.lines() {
     //     println!("line: {}", line.unwrap());
     //     counter += 1;
@@ -44,23 +46,39 @@ fn wc(file: File) -> u64 {
     for line in buff.lines() {
         // bufreader returns Result<String, Err>, unwrap before using
         for c in line.unwrap().chars() {
-            println!("char: {}", c);            
+            // println!("char: {}", c);
+            prev_char = c;
             match c {
                 ' ' | '\n' | '\r' | '\t' => {
                     inword = false;
-                    prev_char = c;
+                    wierd_shit = false;
+                },
+                '-' | '—' | '*' | '_' => {
+                    inword = false;
+                    wierd_shit = true;
+                    // println!("prev_char: {}", prev_char);
                 },
                 _ => {
                     inword = true;
-                    prev_char = c;
+                    wierd_shit = false;
+                    
                 }
             }
-            if !inword && prev_char != '-' {
-                println!("========== word! ==========");
+            if char_before_char == '-' ||
+                char_before_char == '—' ||
+                char_before_char == '*' ||
+                char_before_char == '_' {
+                wierd_shit = true;
+            }
+            if !inword && !wierd_shit {
+                // println!("========== word! ==========");
                 counter += 1;
             }
+
+            char_before_char = prev_char;
+            // println!("char_before_char: {}", char_before_char);
         }
-        println!("========== word! ==========");
+        // println!("========== word! ==========");
         counter += 1;
     }
     counter
