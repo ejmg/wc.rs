@@ -28,15 +28,39 @@ pub fn run(args: Args) -> Result<(), Box<Error>> {
     
     //println!("\nfile contents:\n{}", contents);
 
-    wc(f);
+    println!("wc: {}", wc(f));
     Ok(())
 }
 
 fn wc(file: File) -> u64 {
     let buff = BufReader::new(file);
     let mut counter = 0;
+    let mut inword: bool;
+    let mut prev_char: char;
+    // for line in buff.lines() {
+    //     println!("line: {}", line.unwrap());
+    //     counter += 1;
+    // }
     for line in buff.lines() {
-        println!("line: {}", line.unwrap());
+        // bufreader returns Result<String, Err>, unwrap before using
+        for c in line.unwrap().chars() {
+            println!("char: {}", c);            
+            match c {
+                ' ' | '\n' | '\r' | '\t' => {
+                    inword = false;
+                    prev_char = c;
+                },
+                _ => {
+                    inword = true;
+                    prev_char = c;
+                }
+            }
+            if !inword && prev_char != '-' {
+                println!("========== word! ==========");
+                counter += 1;
+            }
+        }
+        println!("========== word! ==========");
         counter += 1;
     }
     counter
