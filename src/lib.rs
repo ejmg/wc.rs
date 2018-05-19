@@ -10,8 +10,13 @@ pub struct Args {
 
 impl Args {
     pub fn new(args: &[String]) -> Result<Args, &'static str> {
+        if args.len() < 2 {
+            return Err("Not enough arguments passed.")
+        }
         if args.len() < 3 {
-            return Err("Not enough args, fool.");
+            let flag: String = String::from("-none");
+            let filename = args[1].clone();
+            return Ok(Args{ flag, filename });
         }
         let flag: String = args[1].clone();
         let filename: String = args[2].clone();
@@ -21,46 +26,55 @@ impl Args {
 }
 
 pub fn run(args: Args) -> Result<(), Box<Error>> {
-    let mut f: File = File::open(args.filename)?;
-    //let mut contents: String = String::new();
+    let f: File = File::open(&args.filename)?;
 
-    //f.read_to_string(&mut contents)?;
+    let results: (u64, u64, u64);
     
-    //println!("\nfile contents:\n{}", contents);
+    results = wc(f);
 
-    println!("wc: {}", wc(f));
+    if args.flag == "-c" {
+        println!("text: {}, chars: {}", args.filename, results.0);
+    } else if args.flag == "-w" {
+        println!("text: {}, words: {}", args.filename, results.1);
+    } else if args.flag == "-l" {
+        println!("text: {}, lines: {}", args.filename, results.2);
+    } else {
+        println!("text: {}, chars: {}, words: {}, lines: {}", args.filename,
+                 results.0, results.1, results.2);
+    }
     Ok(())
 }
 
-fn wc(file: File) -> u64 {
+fn wc(file: File) -> (u64, u64, u64) {
     let buff = BufReader::new(file);
-    let mut counter = 0;
-    let mut inword: bool = false;
-    let mut wierd_shit: bool = false;
+    let mut w = 0;
+    let mut chars = 0;
+    let mut l = 0;
+    let mut inword: bool;
+    let mut symbol: bool;
     let mut prev_char: char;
+    // given the logic of my program, i need to give this a value else it will
+    // allow an invalid comparison on the first go.
     let mut char_before_char: char = '\0';
-    // for line in buff.lines() {
-    //     println!("line: {}", line.unwrap());
-    //     counter += 1;
-    // }
+    
     for line in buff.lines() {
         // bufreader returns Result<String, Err>, unwrap before using
         for c in line.unwrap().chars() {
-            // println!("char: {}", c);
+            // capture the char before using it.
+            chars += 1;
             prev_char = c;
             match c {
                 ' ' | '\n' | '\r' | '\t' => {
                     inword = false;
-                    wierd_shit = false;
+                    symbol = false;
                 },
                 '-' | '—' | '*' | '_' => {
                     inword = false;
-                    wierd_shit = true;
-                    // println!("prev_char: {}", prev_char);
+                    symbol = true;
                 },
                 _ => {
                     inword = true;
-                    wierd_shit = false;
+                    symbol = false;
                     
                 }
             }
@@ -68,20 +82,18 @@ fn wc(file: File) -> u64 {
                 char_before_char == '—' ||
                 char_before_char == '*' ||
                 char_before_char == '_' {
-                wierd_shit = true;
+                symbol = true;
             }
-            if !inword && !wierd_shit {
-                // println!("========== word! ==========");
-                counter += 1;
+            if !inword && !symbol {
+                w += 1;
             }
 
             char_before_char = prev_char;
-            // println!("char_before_char: {}", char_before_char);
         }
-        // println!("========== word! ==========");
-        counter += 1;
+        w += 1;
+        l += 1;
     }
-    counter
+    (chars, w, l)
 }
 
 #[cfg(test)]
@@ -89,7 +101,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn first_word() {
+    fn basic_wc() {
         let mut flag: String = "-w".to_string();
         let f: File = File::open("Im-Nobody-E-Dickinson.txt").expect("whoops");
 
