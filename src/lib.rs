@@ -61,7 +61,6 @@ fn wc(file: File) -> (u64, u64, u64) {
         // bufreader returns Result<String, Err>, unwrap before using
         for c in line.unwrap().chars() {
             // capture the char before using it.
-            chars += 1;
             prev_char = c;
             match c {
                 ' ' | '\n' | '\r' | '\t' => {
@@ -71,10 +70,12 @@ fn wc(file: File) -> (u64, u64, u64) {
                 '-' | '—' | '*' | '_' => {
                     inword = false;
                     symbol = true;
+                    chars += 1;
                 },
                 _ => {
                     inword = true;
                     symbol = false;
+                    chars += 1;
                     
                 }
             }
